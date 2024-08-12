@@ -81,9 +81,11 @@
             margin: 0.5vh 0;
             display: inline-block;
         }
+
         .btn-view {
             background-color: #007aff;
         }
+
         .btn-edit {
             background-color: #34c759;
         }
@@ -105,6 +107,57 @@
                 font-size: 17px;
             }
         }
+
+        .modal {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 1;
+            /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Black background with opacity */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            /* Could be more or less, depending on screen size */
+            max-width: 600px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .qr-code {
+            width: 15rem;
+            height: 15rem;
+            display: block;
+            margin: auto;
+        }
     </style>
 </head>
 
@@ -125,7 +178,7 @@
                 </thead>
                 <tbody>
                     <% rooms.forEach(function(room) { %>
-                        
+
                         <tr>
                             <td>
                                 <%= room._id %>
@@ -137,6 +190,7 @@
                                 <%= room.serialNumber %>
                             </td>
                             <td>
+                            <button id="showQR" onclick="showQRCode('https:/\/api.qrserver.com/v1/create-qr-code/?size=500x500&data=https:/\/brave-sloths-film.loca.lt/room/<%= room._id %>');" class="btn btn-view">TOON QR</button>
                                 <a href="/edit-room/<%= room._id %>" class="btn btn-edit">Bewerken</a>
                                 <a href="/delete-room/<%= room._id %>" class="btn btn-delete">Verwijderen</a>
                             </td>
@@ -172,7 +226,7 @@
                             </td>
                             <td>
                                 <a href="/view-problem/<%= problem._id %>" class="btn btn-view">Bekijken</a>
-                                <a href="/edit-problem/<%= problem._id %>" class="btn btn-edit">Bewerken</a>
+                                <!-- <a href="/edit-problem/<%= problem._id %>" class="btn btn-edit">Bewerken</a> -->
                                 <a href="/delete-problem/<%= problem._id %>" class="btn btn-delete">Verwijderen</a>
                             </td>
                         </tr>
@@ -181,6 +235,13 @@
             </table>
         </div>
     </div>
+    <div id="qrModal" class="modal">
+        <div class="modal-content">
+            <span onclick="closeQRCode();" class="close">&times;</span>
+            <img id="qrImage" class="qr-code" src="" alt="QR Code">
+        </div>
+    </div>
+    <script src="/dashboard.js"></script>
 </body>
 
 </html>

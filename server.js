@@ -10,12 +10,20 @@ const path = require('path')
 
 
 app.use(helmet())
-app.use(morgan("dev"))
+app.use(morgan("common"))
 
 app.set('view engine', 'ejs')
 app.set('public', 'public')
 app.use(express.static('public'))
 app.use(express.urlencoded({ extended: true }))
+// Middleware to handle CSP headers
+app.use((req, res, next) => {
+    // Disable CSP for specific route
+    if (req.path.startsWith('/dashb')) {
+        res.removeHeader("Content-Security-Policy");
+    }
+    next();
+});
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -45,6 +53,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/dashboard', async (req, res) => {
+    res.removeHeader("Content-Security-Policy");
     let rooms = await Room.find({})
     let problems = await Problem.find({})
     res.render('dashboard.ejs', { rooms, problems })
