@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pas een Kamer Aan - Dashboard</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Helvetica', sans-serif;
+            background: linear-gradient(180deg, #0e90a7 0%, #131185 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: white;
+        }
+
+        #dashboardContainer {
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 5vh;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        #dashboardHeader {
+            text-align: center;
+            font-size: 7vw;
+            font-weight: 600;
+            color: #0e90a7;
+            margin-bottom: 5vh;
+        }
+
+        .section {
+            margin-bottom: 5vh;
+        }
+
+        .section h2 {
+            font-size: 5vw;
+            color: #131185;
+            margin-bottom: 2vh;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 0.5vh;
+            font-weight: bold;
+        }
+
+        input {
+            padding: 1vh;
+            margin-bottom: 1vh;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .btn {
+            padding: 1vh 2vw;
+            border-radius: 5px;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            margin: 0.5vh 0;
+            display: inline-block;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .btn-submit {
+            background-color: #34c759;
+        }
+
+        .btn-back {
+            background-color: #007bff;
+            display: inline-block;
+            margin-right: 1vw;
+        }
+
+        @media (min-width: 768px) {
+            #dashboardHeader {
+                font-size: 36px;
+            }
+
+            .section h2 {
+                font-size: 24px;
+            }
+
+            .btn,
+            input {
+                font-size: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dashboardContainer">
+        <div id="dashboardHeader">Pas een Kamer Aan</div>
+
+        <div class="section">
+            <h2>Pas deze kamer aan</h2>
+            <form action="/edit-room" method="POST">
+                <label for="name">Naam:</label>
+                <input type="text" id="name" name="name" required value="<%= room.name %>">
+
+                <label for="serialNumber">Serienummer:</label>
+                <input type="text" id="serialNumber" name="serialNumber" required value="<%= room.serialNumber %>">
+
+                <label for="manufacturer">Fabrikant:</label>
+                <input type="text" id="manufacturer" name="manufacturer" required value="<%= room.manufacturer %>">
+
+                <label for="contactNumber">ContactNummer:</label>
+                <input type="text" id="contactNumber" name="contactNumber" required value="<%= room.contactNumber %>">
+
+                <input type="text" id="id" name="id" value="<%= room.id %>" style="display: none;">
+                <button type="submit" class="btn btn-submit">Opslaan</button>
+                <a href="/dashboard" class="btn btn-back">Terug naar Dashboard</a>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Manage Rooms and Problems</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Helvetica', sans-serif;
+            background: linear-gradient(180deg, #0e90a7 0%, #131185 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: white;
+        }
+
+        #dashboardContainer {
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 5vh;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        #dashboardHeader {
+            text-align: center;
+            font-size: 7vw;
+            font-weight: 600;
+            color: #0e90a7;
+            margin-bottom: 5vh;
+        }
+
+        .section {
+            margin-bottom: 5vh;
+        }
+
+        .section h2 {
+            font-size: 5vw;
+            color: #131185;
+            margin-bottom: 2vh;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 3vh;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 1vh 1vw;
+            text-align: left;
+        }
+
+        th {
+            background-color: #0e90a7;
+            color: white;
+        }
+
+        td {
+            background-color: #f9f9f9;
+        }
+
+        .btn {
+            padding: 1vh 2vw;
+            border-radius: 5px;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            margin: 0.5vh 0;
+            display: inline-block;
+        }
+
+        .btn-edit {
+            background-color: #34c759;
+        }
+
+        .btn-delete {
+            background-color: #ff3b30;
+        }
+
+        @media (min-width: 768px) {
+            #dashboardHeader {
+                font-size: 36px;
+            }
+
+            .section h2 {
+                font-size: 24px;
+            }
+
+            .btn {
+                font-size: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dashboardContainer">
+        <div id="dashboardHeader">Beheer Kamers en Problemen</div>
+
+        <div class="section">
+            <h2>Kamers</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kamer ID</th>
+                        <th>Naam</th>
+                        <th>Serienummer</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% rooms.forEach(function(room) { %>
+                        
+                        <tr>
+                            <td>
+                                <%= room._id %>
+                            </td>
+                            <td>
+                                <%= room.name %>
+                            </td>
+                            <td>
+                                <%= room.serialNumber %>
+                            </td>
+                            <td>
+                                <a href="/edit-room/<%= room._id %>" class="btn btn-edit">Bewerken</a>
+                                <a href="/delete-room/<%= room._id %>" class="btn btn-delete">Verwijderen</a>
+                            </td>
+                        </tr>
+                        <% }) %>
+                </tbody>
+            </table>
+            <a href="/add-room" class="btn btn-edit">Kamer Toevoegen</a>
+        </div>
+
+        <div class="section">
+            <h2>Problemen</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Probleem ID</th>
+                        <th>Kamer</th>
+                        <th>Beschrijving</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% problems.forEach(function(problem) { %>
+                        <tr>
+                            <td>
+                                <%= problem._id %>
+                            </td>
+                            <td>
+                                <%= problem.name %>
+                            </td>
+                            <td>
+                                <%= problem.description %>
+                            </td>
+                            <td>
+                                <a href="/edit-problem/<%= problem._id %>" class="btn btn-edit">Bewerken</a>
+                                <a href="/delete-problem/<%= problem._id %>" class="btn btn-delete">Verwijderen</a>
+                            </td>
+                        </tr>
+                        <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

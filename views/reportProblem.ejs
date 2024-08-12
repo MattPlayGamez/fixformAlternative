@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Problem</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Helvetica', sans-serif;
+            background: linear-gradient(180deg, #0e90a7 0%, #131185 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #iPhone1415 {
+            width: 90%;
+            max-width: 430px;
+            background: linear-gradient(180deg, #0e90a7 0%, #131185 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            color: white;
+        }
+
+        #reportProb {
+            font-size: 7vw;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 5vh;
+        }
+
+        #nameInput, #describePr, #btnAddImage, #imagePreview, #btnReport {
+            width: 100%;
+            margin-bottom: 5vh;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 3vh 2vw;
+            border: none;
+            border-radius: 5px;
+            box-sizing: border-box;
+            background: #ffffff;
+            font-size: 4vw;
+            color: rgba(60, 60, 67, 0.8);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(60, 60, 67, 0.3);
+        }
+
+        textarea {
+            height: 20vh;
+            resize: none;
+        }
+
+        #btnAddImage label {
+            display: inline-block;
+            width: 100%;
+            padding: 3vh 2vw;
+            background-color: #007aff;
+            color: #ffffff;
+            font-size: 4vw;
+            text-align: center;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #btnAddImage input {
+            display: none;
+        }
+
+        #imagePreview img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-top: 1vh;
+            max-height: 25vh;
+        }
+
+        #btnReport button {
+            width: 100%;
+            padding: 3vh 2vw;
+            background-color: #34c759;
+            color: #ffffff;
+            font-size: 4vw;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            #reportProb {
+                font-size: 36px;
+            }
+
+            input, textarea, #btnAddImage label, #btnReport button {
+                font-size: 17px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="iPhone1415">
+        <form id="reportForm" method="POST" action="/report/<%= roomID %>">
+            <div id="reportProb">Report Problem</div>
+            <div id="nameInput">
+                <input type="text" id="name" name="name" placeholder="Wat is je naam?" required>
+            </div>
+            <div id="describePr">
+                <textarea name="description" placeholder="Beschrijf het probleem" required></textarea>
+            </div>
+            <div id="btnAddImage">
+                <input type="file" id="imageInput" name="image" accept="image/*">
+                <label for="imageInput">Add Image</label>
+            </div>
+            <div id="imagePreview"></div>
+            <div id="btnReport">
+                <button onclick="saveName()" type="submit">Verzend Rapport</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="/reportProblem.js"></script>
+</body>
+</html>

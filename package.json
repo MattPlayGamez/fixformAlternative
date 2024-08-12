@@ -1,0 +1,31 @@
+{
+  "name": "fixformalternative",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MattPlayGamez/fixformAlternative.git"
+  },
+  "keywords": [
+    "FIXFORM-Alternative"
+  ],
+  "author": "Mathys Penson",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/MattPlayGamez/fixformAlternative/issues"
+  },
+  "homepage": "https://github.com/MattPlayGamez/fixformAlternative#readme",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-ejs-layouts": "^2.5.1",
+    "helmet": "^7.1.0",
+    "mongoose": "^8.5.2",
+    "morgan": "^1.10.0"
+  }
+}

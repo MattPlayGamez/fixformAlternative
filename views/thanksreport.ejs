@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Helvetica', sans-serif;
+            background: linear-gradient(180deg, #0e90a7 0%, #131185 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+
+        #thankYouContainer {
+            width: 90%;
+            max-width: 430px;
+            background: linear-gradient(180deg, #0e90a7 0%, #131185 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #thankYouMessage {
+            font-size: 7vw;
+            font-weight: 600;
+            margin-bottom: 5vh;
+        }
+
+        #additionalInfo {
+            font-size: 4vw;
+            margin-bottom: 5vh;
+            color: #c0c0c0;
+        }
+
+        #backHome {
+            width: 100%;
+        }
+
+        #backHome button {
+            width: 100%;
+            padding: 3vh 2vw;
+            background-color: #34c759;
+            color: #ffffff;
+            font-size: 4vw;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            #thankYouMessage {
+                font-size: 36px;
+            }
+
+            #additionalInfo,
+            #backHome button {
+                font-size: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="thankYouContainer">
+        <div id="thankYouMessage">Bedankt <%= name %> voor het rapporteren!</div>
+        <div id="additionalInfo">
+            We waarderen uw hulp bij het verbeteren van onze diensten.
+        </div>
+    </div>
+
+</body>
+
+</html>
