@@ -81,7 +81,9 @@
             margin: 0.5vh 0;
             display: inline-block;
         }
-
+        .btn-view {
+            background-color: #007aff;
+        }
         .btn-edit {
             background-color: #34c759;
         }
@@ -151,7 +153,7 @@
                 <thead>
                     <tr>
                         <th>Probleem ID</th>
-                        <th>Kamer</th>
+                        <th>Persoon</th>
                         <th>Beschrijving</th>
                         <th>Acties</th>
                     </tr>
@@ -169,6 +171,7 @@
                                 <%= problem.description %>
                             </td>
                             <td>
+                                <a href="/view-problem/<%= problem._id %>" class="btn btn-view">Bekijken</a>
                                 <a href="/edit-problem/<%= problem._id %>" class="btn btn-edit">Bewerken</a>
                                 <a href="/delete-problem/<%= problem._id %>" class="btn btn-delete">Verwijderen</a>
                             </td>

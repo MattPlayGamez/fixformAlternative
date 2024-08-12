@@ -106,7 +106,7 @@
 </head>
 <body>
     <div id="iPhone1415">
-        <form id="reportForm" method="POST" action="/report/<%= roomID %>">
+        <form id="reportForm" method="POST" action="/report/<%= roomID %>" enctype="multipart/form-data">
             <div id="reportProb">Report Problem</div>
             <div id="nameInput">
                 <input type="text" id="name" name="name" placeholder="Wat is je naam?" required>

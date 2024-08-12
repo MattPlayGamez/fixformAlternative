@@ -5,6 +5,8 @@ const helmet = require('helmet')
 const morgan = require('morgan')
 const app = express()
 const fs = require('fs/promises')
+const multer = require('multer')
+const path = require('path')
 
 
 app.use(helmet())
@@ -14,6 +16,9 @@ app.set('view engine', 'ejs')
 app.set('public', 'public')
 app.use(express.static('public'))
 app.use(express.urlencoded({ extended: true }))
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 mongoose.connect(`mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@fixformalternative.xva7k.mongodb.net/?retryWrites=true&w=majority&appName=FixFormAlternative`)
 
@@ -47,15 +52,6 @@ app.get('/dashboard', async (req, res) => {
 
 app.get('/room', (req, res) => {
     res.redirect('/room/66b91e834e09ffa0ca2c45bc')
-})
-
-app.get('/new', async (req, res) => {
-    const kamer = new Room({
-        name: 'kamer',
-        serialNumber: '123456789'
-    })
-    res.send("The ID is: " + kamer._id)
-    kamer.save()
 })
 
 app.get('/room/:id', async (req, res) => {
@@ -104,7 +100,7 @@ app.get('/edit-room/:id', async (req, res) => {
     res.render('edit-room.ejs', { room })
 })
 
-app.post('/edit-room', async(req, res) => {
+app.post('/edit-room', async (req, res) => {
     const { id, name, serialNumber, manufacturer, contactNumber } = req.body
 
     const data = {
@@ -114,12 +110,26 @@ app.post('/edit-room', async(req, res) => {
         contactNumber
     }
     await Room.updateOne({ _id: id }, data)
-
     res.redirect('/dashboard')
 })
 
+app.get('/view-problem/:id', async (req, res) => {
+    const problem = await Problem.findById(req.params.id)
+    const roomID = problem.roomID
 
-app.post('/report/:id', async (req, res) => {
+    const room = await Room.findById(roomID)
+    res.render('view-problem.ejs', { problem, room })
+})
+
+app.get('/report/:id', (req, res) => {
+    res.redirect('/room/' + req.params.id)
+})
+
+app.post('/report/:id', upload.single('image'), async (req, res) => {
+    let isThereAnImage = true
+    if (!req.file) {
+        isThereAnImage = false
+    }
     const { name, description, image } = req.body;
     const roomID = req.params.id; // Assuming roomID is intended to be a string
     console.log(req.body);
@@ -129,29 +139,44 @@ app.post('/report/:id', async (req, res) => {
     const imageName = `${roomID}_${date}.jpg`;
     const imagePath = `./public/images/${imageName}`;
 
-    try {
-        await fs.writeFile(imagePath, image, 'base64');
-        console.log('Image uploaded successfully: ' + imagePath);
-    } catch (error) {
-        console.error('Error uploading file:', error);
-        return res.status(500).send('Error uploading file'); // Exit after sending response
+    if (isThereAnImage) {
+        const problem = new Problem({
+            name,
+            description,
+            roomID, // Ensure the schema allows roomID as a string
+            image: `/images/${imageName}`
+        });
+        try {
+            await problem.save();
+            res.render('thanksreport.ejs', { name })
+            console.log('Report submitted successfully: ' + problem._id);
+            fs.writeFile(imagePath, req.file.buffer, (err) => {
+                if (err) {
+                    return res.status(500).send('Failed to save file.');
+                }
+                res.send('File uploaded and saved successfully!');
+            });
+        } catch (error) {
+            console.error('Error submitting report:', error);
+            res.status(500).send('Error submitting report');
+        }
+    } else {
+        const problem = new Problem({
+            name,
+            description,
+            roomID, // Ensure the schema allows roomID as a string
+            image: null
+        });
+        try {
+            await problem.save();
+            res.render('thanksreport.ejs', { name })
+            console.log('Report submitted successfully: ' + problem._id);
+        } catch (error) {
+            console.error('Error submitting report:', error);
+            res.status(500).send('Error submitting report');
+        }
     }
 
-    const problem = new Problem({
-        name,
-        description,
-        roomID, // Ensure the schema allows roomID as a string
-        image: imagePath
-    });
-
-    try {
-        await problem.save();
-        res.render('thanksreport.ejs', { name })
-        console.log('Report submitted successfully: ' + problem._id);
-    } catch (error) {
-        console.error('Error submitting report:', error);
-        res.status(500).send('Error submitting report');
-    }
 });
 
 
