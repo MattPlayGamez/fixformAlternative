@@ -59,7 +59,7 @@ const Problem = new mongoose.model("Problem", problemSchema)
 
 
 app.get('/', (req, res) => {
-    res.redirect('/login')
+    res.redirect('/dashboard')
 })
 
 app.get('/login', (req, res) => {
@@ -85,9 +85,6 @@ app.get('/dashboard',checkAuthStatus, async (req, res) => {
     res.render('dashboard.ejs', { rooms, problems })
 })
 
-app.get('/room', (req, res) => {
-    res.redirect('/room/66b91e834e09ffa0ca2c45bc')
-})
 
 app.get('/room/:id', async (req, res) => {
     try {
