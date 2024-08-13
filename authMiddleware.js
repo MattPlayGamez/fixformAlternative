@@ -17,21 +17,21 @@ const jwt = require('jsonwebtoken')
 function checkAuthStatus(req, res, next) {
     // const authToken = req.header('authorization');
     const authToken = req.cookies.token
-    
+
     console.log(authToken)
 
     if (authToken) {
 
         jwt.verify(authToken, process.env.JWT_SECRET, (err, user) => {
             if (err) {
-                return res.redirect(403, '/login'); // Forbidden if the token is invalid
+                return res.redirect('/login'); // Forbidden if the token is invalid
             }
 
             console.log(user)
             next(); // Pass control to the next middleware/route handler
         });
     } else {
-        res.redirect(401, '/login'); // Unauthorized if no token is provided
+        res.redirect('/login'); // Unauthorized if no token is provided
     }
 
 }
