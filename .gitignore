@@ -133,3 +133,4 @@ dist
 public/images/*
 public/files/*
 .vercel
+*.pem

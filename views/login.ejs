@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Helvetica', sans-serif;
+            background: linear-gradient(180deg, #0e90a7 0%, #131185 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+
+        #loginContainer {
+            width: 90%;
+            max-width: 430px;
+            background: linear-gradient(180deg, #0e90a7 0%, #131185 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #loginHeader {
+            font-size: 7vw;
+            font-weight: 600;
+            margin-bottom: 5vh;
+            color: #fae800;
+        }
+
+        #passwordInput {
+            width: 100%;
+            padding: 3vh 2vw;
+            border-radius: 8px;
+            border: none;
+            font-size: 4vw;
+            margin-bottom: 4vh;
+            box-sizing: border-box;
+        }
+
+        #loginButton {
+            width: 100%;
+            padding: 3vh 2vw;
+            background-color: #34c759;
+            color: #ffffff;
+            font-size: 4vw;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            #loginHeader {
+                font-size: 36px;
+            }
+
+            #passwordInput, #loginButton {
+                font-size: 17px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginContainer">
+        <% if (locals.error) { %>
+            <span style="color: red; display: block; margin-bottom: 10px;"><%= locals.error %></span>
+        <% } %>
+
+        
+        <div id="loginHeader">Inloggen</div>
+        <form action="/login" method="post">
+            <input type="password" id="passwordInput" name="password" placeholder="Voer wachtwoord in" required>
+            <button type="submit" id="loginButton">Inloggen</button>
+        </form>
+    </div>
+</body>
+</html>

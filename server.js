@@ -7,10 +7,18 @@ const app = express()
 const fs = require('fs/promises')
 const multer = require('multer')
 const path = require('path')
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+const cors = require('cors')
+const checkAuthStatus = require('./authMiddleware.js')
+const cookieParser = require('cookie-parser');
+
+HASH = process.env.HASH
 
 
 app.use(helmet())
 app.use(morgan("common"))
+app.use(cookieParser())
 
 app.set('view engine', 'ejs')
 app.set('public', 'public')
@@ -22,13 +30,14 @@ app.use((req, res, next) => {
     if (req.path.startsWith('/dashb')) {
         res.removeHeader("Content-Security-Policy");
     }
+
     next();
 });
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+mongoose.connect(`mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@fixformalternative.xva7k.mongodb.net/?retryWrites=true&w=majority&appName=FixFormAlternative`)
 
-mongoose.connect(`mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@fixformalternative.xva7k.mongodb.net/?retryWrites=true&w=majority&appName=FixFormAlternative`)
 
 
 const roomSchema = new mongoose.Schema({
@@ -48,11 +57,28 @@ const problemSchema = new mongoose.Schema({
 const Room = new mongoose.model("Room", roomSchema)
 const Problem = new mongoose.model("Problem", problemSchema)
 
+
 app.get('/', (req, res) => {
-    res.redirect('/dashboard')
+    res.redirect('/login')
 })
 
-app.get('/dashboard', async (req, res) => {
+app.get('/login', (req, res) => {
+    res.render('login.ejs')
+})
+
+app.post('/login', (req, res) => {
+    if (bcrypt.compareSync(req.body.password,HASH)) {
+        let token = jwt.sign({ authenticated: true}, process.env.JWT_SECRET, { expiresIn: '1h' })
+        // console.log(res.getHeaders());
+        res.cookie('token', token)
+        return res.redirect('/dashboard')
+    } else {
+        res.render('login.ejs', { error: 'Bruh' })
+    }
+})
+
+
+app.get('/dashboard',checkAuthStatus, async (req, res) => {
     res.removeHeader("Content-Security-Policy");
     let rooms = await Room.find({})
     let problems = await Problem.find({})
@@ -74,24 +100,24 @@ app.get('/room/:id', async (req, res) => {
 
 })
 
-app.get('/delete-problem/:id', async (req, res) => {
+app.get('/delete-problem/:id', checkAuthStatus,async (req, res) => {
     await Problem.findByIdAndDelete(req.params.id)
     res.redirect('/dashboard')
 
 })
-app.get('/delete-room/:id', async (req, res) => {
+app.get('/delete-room/:id',checkAuthStatus, async (req, res) => {
     await Room.findByIdAndDelete(req.params.id)
     res.redirect('/dashboard')
 })
 
-app.get('/add-room', (req, res) => {
+app.get('/add-room', checkAuthStatus,(req, res) => {
     res.render('add-room', {
         title: 'Voeg Kamer Toe - Dashboard',
         header: 'Voeg Nieuwe Kamer Toe',
     });
 });
 
-app.post('/add-room', (req, res) => {
+app.post('/add-room', checkAuthStatus,(req, res) => {
     const { name, serialNumber, manufacturer, contactNumber } = req.body
 
     const room = new Room({
@@ -104,12 +130,12 @@ app.post('/add-room', (req, res) => {
     res.redirect('/dashboard')
 })
 
-app.get('/edit-room/:id', async (req, res) => {
+app.get('/edit-room/:id', checkAuthStatus, async (req, res) => {
     const room = await Room.findById(req.params.id)
     res.render('edit-room.ejs', { room })
 })
 
-app.post('/edit-room', async (req, res) => {
+app.post('/edit-room',checkAuthStatus, async (req, res) => {
     const { id, name, serialNumber, manufacturer, contactNumber } = req.body
 
     const data = {
@@ -122,7 +148,7 @@ app.post('/edit-room', async (req, res) => {
     res.redirect('/dashboard')
 })
 
-app.get('/view-problem/:id', async (req, res) => {
+app.get('/view-problem/:id',checkAuthStatus, async (req, res) => {
     const problem = await Problem.findById(req.params.id)
     const roomID = problem.roomID
 
@@ -190,5 +216,4 @@ app.post('/report/:id', upload.single('image'), async (req, res) => {
 
 
 
-module.exports = app;
-// app.listen(process.env.PORT || 3000, () => console.log('Server started'))
+app.listen(process.env.PORT || 3000, () => console.log('Server started'))
