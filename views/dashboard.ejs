@@ -190,7 +190,7 @@
                                 <%= room.serialNumber %>
                             </td>
                             <td>
-                            <button id="showQR" onclick="showQRCode('https:/\/api.qrserver.com/v1/create-qr-code/?size=500x500&data=<%= window.location.origin %>/room/<%= room._id %>');" class="btn btn-view">TOON QR</button>
+                            <button id="showQR" onclick="showQRCode('https:/\/api.qrserver.com/v1/create-qr-code/?size=500x500&data=https:/\/fixformalternative-production.up.railway.app/room/<%= room._id %>');" class="btn btn-view">TOON QR</button>
                                 <a href="/edit-room/<%= room._id %>" class="btn btn-edit">Bewerken</a>
                                 <a href="/delete-room/<%= room._id %>" class="btn btn-delete">Verwijderen</a>
                             </td>
