@@ -12,6 +12,7 @@ const jwt = require('jsonwebtoken')
 const cors = require('cors')
 const checkAuthStatus = require('./authMiddleware.js')
 const cookieParser = require('cookie-parser');
+const imgbbUploader = require('imgbb-uploader')
 
 HASH = process.env.HASH
 
@@ -30,7 +31,12 @@ app.use((req, res, next) => {
     if (req.path.startsWith('/dashb')) {
         res.removeHeader("Content-Security-Policy");
     }
-
+    if (req.path.startsWith("/view")) {
+        if (req.path.startsWith("/view")) {
+            res.header("Content-Security-Policy", "img-src 'self' https://i.ibb.co");
+            res.header("Access-Control-Allow-Origin", "https://i.ibb.co");
+        }
+    }
     next();
 });
 
@@ -51,7 +57,7 @@ const problemSchema = new mongoose.Schema({
     name: String,
     description: String,
     roomID: String,
-    image: String
+    imageLink: String,
 })
 
 const Room = new mongoose.model("Room", roomSchema)
@@ -67,8 +73,8 @@ app.get('/login', (req, res) => {
 })
 
 app.post('/login', (req, res) => {
-    if (bcrypt.compareSync(req.body.password,HASH)) {
-        let token = jwt.sign({ authenticated: true}, process.env.JWT_SECRET, { expiresIn: '1h' })
+    if (bcrypt.compareSync(req.body.password, HASH)) {
+        let token = jwt.sign({ authenticated: true }, process.env.JWT_SECRET, { expiresIn: '1h' })
         // console.log(res.getHeaders());
         res.cookie('token', token)
         return res.redirect('/dashboard')
@@ -78,7 +84,7 @@ app.post('/login', (req, res) => {
 })
 
 
-app.get('/dashboard',checkAuthStatus, async (req, res) => {
+app.get('/dashboard', checkAuthStatus, async (req, res) => {
     res.removeHeader("Content-Security-Policy");
     let rooms = await Room.find({})
     let problems = await Problem.find({})
@@ -97,24 +103,25 @@ app.get('/room/:id', async (req, res) => {
 
 })
 
-app.get('/delete-problem/:id', checkAuthStatus,async (req, res) => {
+app.get('/delete-problem/:id', checkAuthStatus, async (req, res) => {
     await Problem.findByIdAndDelete(req.params.id)
     res.redirect('/dashboard')
 
 })
-app.get('/delete-room/:id',checkAuthStatus, async (req, res) => {
+app.get('/delete-room/:id', checkAuthStatus, async (req, res) => {
     await Room.findByIdAndDelete(req.params.id)
+    await Problem.deleteMany({ roomID: req.params.id })
     res.redirect('/dashboard')
 })
 
-app.get('/add-room', checkAuthStatus,(req, res) => {
+app.get('/add-room', checkAuthStatus, (req, res) => {
     res.render('add-room', {
         title: 'Voeg Kamer Toe - Dashboard',
         header: 'Voeg Nieuwe Kamer Toe',
     });
 });
 
-app.post('/add-room', checkAuthStatus,(req, res) => {
+app.post('/add-room', checkAuthStatus, (req, res) => {
     const { name, serialNumber, manufacturer, contactNumber } = req.body
 
     const room = new Room({
@@ -132,7 +139,7 @@ app.get('/edit-room/:id', checkAuthStatus, async (req, res) => {
     res.render('edit-room.ejs', { room })
 })
 
-app.post('/edit-room',checkAuthStatus, async (req, res) => {
+app.post('/edit-room', checkAuthStatus, async (req, res) => {
     const { id, name, serialNumber, manufacturer, contactNumber } = req.body
 
     const data = {
@@ -145,7 +152,7 @@ app.post('/edit-room',checkAuthStatus, async (req, res) => {
     res.redirect('/dashboard')
 })
 
-app.get('/view-problem/:id',checkAuthStatus, async (req, res) => {
+app.get('/view-problem/:id', checkAuthStatus, async (req, res) => {
     const problem = await Problem.findById(req.params.id)
     const roomID = problem.roomID
 
@@ -162,32 +169,35 @@ app.post('/report/:id', upload.single('image'), async (req, res) => {
     if (!req.file) {
         isThereAnImage = false
     }
-    const { name, description, image } = req.body;
+    const { name, description } = req.body;
     const roomID = req.params.id; // Assuming roomID is intended to be a string
     console.log(req.body);
     console.log(req.params);
 
-    const date = new Date().toISOString().replace(/:/g, '-');
-    const imageName = `${roomID}_${date}.jpg`;
-    const imagePath = `./public/images/${imageName}`;
-
     if (isThereAnImage) {
-        const problem = new Problem({
-            name,
-            description,
-            roomID, // Ensure the schema allows roomID as a string
-            image: `/images/${imageName}`
-        });
         try {
-            await problem.save();
-            res.render('thanksreport.ejs', { name })
-            console.log('Report submitted successfully: ' + problem._id);
-            fs.writeFile(imagePath, req.file.buffer, (err) => {
-                if (err) {
-                    return res.status(500).send('Failed to save file.');
-                }
-                res.send('File uploaded and saved successfully!');
-            });
+            const options = {
+                apiKey: process.env.IMGBB_APIKEY, // MANDATORY
+
+                base64string:
+                    req.file.buffer.toString('base64'),
+            };
+            imgbbUploader(options)
+                .then((response) => {
+                    const problem = new Problem({
+                        name,
+                        description,
+                        roomID, // Ensure the schema allows roomID as a string
+                        imageLink: response.display_url,
+                    });
+                    console.log(response)
+                    problem.save();
+                    res.render('thanksreport.ejs', { name })
+                    console.log('Report submitted successfully: ' + problem._id);
+                })
+                .catch((error) => console.error(error));
+
+
         } catch (error) {
             console.error('Error submitting report:', error);
             res.status(500).send('Error submitting report');
