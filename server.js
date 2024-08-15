@@ -12,14 +12,62 @@ const jwt = require('jsonwebtoken')
 const cors = require('cors')
 const checkAuthStatus = require('./authMiddleware.js')
 const cookieParser = require('cookie-parser');
-const imgbbUploader = require('imgbb-uploader')
-
+const fbAdmin = require('firebase-admin')
+const service_account = require('./service_account.json')
 HASH = process.env.HASH
 
 
 app.use(helmet())
 app.use(morgan("common"))
 app.use(cookieParser())
+
+fbAdmin.initializeApp({
+    credential: fbAdmin.credential.cert(service_account),
+    storageBucket: "white-watch-405218.appspot.com"
+});
+
+const bucket = fbAdmin.storage().bucket()
+
+
+async function uploadFile(buffer, name) {
+    if (!name) {
+        throw new Error('No object name provided');
+    }
+
+    if (!buffer || !buffer.length) {
+        throw new Error('No buffer provided');
+    }
+
+    return new Promise((resolve, reject) => {
+        const file = bucket.file(name);
+        const stream = file.createWriteStream({
+            metadata: {
+                contentType: 'image/jpeg',
+            },
+        });
+
+        stream.on('error', (err) => {
+            console.error('Error uploading image:', err);
+            reject(err);
+        });
+
+        stream.on('finish', async () => {
+            try {
+                await file.makePublic();
+                const publicUrl = file.publicUrl();
+                const internalLink = file.cloudStorageURI
+                const combined = publicUrl + '&n&' + internalLink
+                resolve(combined);
+            } catch (err) {
+                console.error('Error making file public:', err);
+                reject(err);
+            }
+        });
+
+        stream.end(buffer);
+    });
+}
+
 
 app.set('view engine', 'ejs')
 app.set('public', 'public')
@@ -33,8 +81,8 @@ app.use((req, res, next) => {
     }
     if (req.path.startsWith("/view")) {
         if (req.path.startsWith("/view")) {
-            res.header("Content-Security-Policy", "img-src 'self' https://i.ibb.co");
-            res.header("Access-Control-Allow-Origin", "https://i.ibb.co");
+            res.header("Content-Security-Policy", "img-src 'self' https://storage.googleapis.com/");
+            res.header("Access-Control-Allow-Origin", "https://storage.googleapis.com/");
         }
     }
     next();
@@ -57,7 +105,8 @@ const problemSchema = new mongoose.Schema({
     name: String,
     description: String,
     roomID: String,
-    imageLink: String,
+    publicimageLink: String,
+    internalLink: String
 })
 
 const Room = new mongoose.model("Room", roomSchema)
@@ -104,6 +153,8 @@ app.get('/room/:id', async (req, res) => {
 })
 
 app.get('/delete-problem/:id', checkAuthStatus, async (req, res) => {
+    const problem = await Problem.findById(req.params.id).internalLink
+
     await Problem.findByIdAndDelete(req.params.id)
     res.redirect('/dashboard')
 
@@ -152,6 +203,12 @@ app.post('/edit-room', checkAuthStatus, async (req, res) => {
     res.redirect('/dashboard')
 })
 
+app.get('/view-room/:id', checkAuthStatus, async (req, res) => {
+    const room = await Room.findById(req.params.id)
+    console.log(room)
+    res.render('view-room.ejs', { room, id: req.params.id })
+})
+
 app.get('/view-problem/:id', checkAuthStatus, async (req, res) => {
     const problem = await Problem.findById(req.params.id)
     const roomID = problem.roomID
@@ -165,61 +222,50 @@ app.get('/report/:id', (req, res) => {
 })
 
 app.post('/report/:id', upload.single('image'), async (req, res) => {
-    let isThereAnImage = true
-    if (!req.file) {
-        isThereAnImage = false
-    }
     const { name, description } = req.body;
-    const roomID = req.params.id; // Assuming roomID is intended to be a string
-    console.log(req.body);
-    console.log(req.params);
+    const roomID = req.params.id;
+    let imageLink = null;
+    let googleLink = null;
 
-    if (isThereAnImage) {
+    // Check if an image was uploaded
+    if (req.file) {
         try {
-            const options = {
-                apiKey: process.env.IMGBB_APIKEY, // MANDATORY
+            console.log('Buffer length:', req.file.buffer.length);
+            const randomId = new mongoose.Types.ObjectId().toString();
+            console.log('Generated file name:', randomId);
 
-                base64string:
-                    req.file.buffer.toString('base64'),
-            };
-            imgbbUploader(options)
-                .then((response) => {
-                    const problem = new Problem({
-                        name,
-                        description,
-                        roomID, // Ensure the schema allows roomID as a string
-                        imageLink: response.display_url,
-                    });
-                    console.log(response)
-                    problem.save();
-                    res.render('thanksreport.ejs', { name })
-                    console.log('Report submitted successfully: ' + problem._id);
-                })
-                .catch((error) => console.error(error));
+            imageLink = await uploadFile(req.file.buffer, randomId);
+            let splittedLink = imageLink.split('&n&');
+            googleLink = splittedLink[1];
+            imageLink = splittedLink[0];
 
-
+            console.log("The link to the image is: " + imageLink);
         } catch (error) {
-            console.error('Error submitting report:', error);
-            res.status(500).send('Error submitting report');
-        }
-    } else {
-        const problem = new Problem({
-            name,
-            description,
-            roomID, // Ensure the schema allows roomID as a string
-            image: null
-        });
-        try {
-            await problem.save();
-            res.render('thanksreport.ejs', { name })
-            console.log('Report submitted successfully: ' + problem._id);
-        } catch (error) {
-            console.error('Error submitting report:', error);
-            res.status(500).send('Error submitting report');
+            console.error('Error uploading image:', error);
+            return res.status(500).send('Error uploading image');
         }
     }
 
+    // Create and save the problem report
+    const report = new Problem({
+        name,
+        description,
+        roomID,
+        publicimageLink: imageLink,
+        internalLink: googleLink
+
+    });
+
+    try {
+        await report.save();
+        console.log('Report submitted successfully: ' + report._id);
+        res.render('thanksreport.ejs', { name });
+    } catch (error) {
+        console.error('Error submitting report:', error);
+        res.status(500).send('Error submitting report');
+    }
 });
+
 
 
 

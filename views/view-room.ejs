@@ -111,26 +111,21 @@
     <div id="dashboardContainer">
         <div id="dashboardHeader">Bekijk dit probleem</div>
 
-        <div class="section">
+        < class="section">
             <h2>Bekijk</h2>
 
-            <label for="name">Wat:</label>
+            <label for="name">Naam ruimte:</label>
             <p><%= room.name %></p>
-            <label for="name">Wie:</label>
-            <p><%= problem.name %></p>
 
-            <label for="serialNumber">Beschrijving:</label>
-            <p><%= problem.description %></p>
+            <label for="serialNumber">Serienummer:</label>
+            <p><%= room.serialNumber %></p>
 
             <label for="manufacturer">Fabrikant:</label>
             <p><%= room.manufacturer %></p>
 
             <label for="contactNumber">ContactNummer:</label>
             <p><%= room.contactNumber %></p>
-            <input type="text" id="id" name="id" value="<%= problem.id %>" style="display: none;">
-            <div>
-            <img loading="lazy" src="<%= problem.publicimageLink %>" alt="The image with the problem">
-            </div>
+            <input type="text" id="id" name="id" value="<%= id %>" style="display: none;">
             <a href="/dashboard" class="btn btn-back">Terug naar Dashboard</a>
         </div>
         <div>

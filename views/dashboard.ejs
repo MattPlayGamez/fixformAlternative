@@ -85,6 +85,9 @@
         .btn-view {
             background-color: #007aff;
         }
+        .btn-view-gray {
+            background-color: lightslategray
+        }
 
         .btn-edit {
             background-color: #34c759;
@@ -190,7 +193,10 @@
                                 <%= room.serialNumber %>
                             </td>
                             <td>
-                            <button id="showQR" onclick="showQRCode('https:/\/api.qrserver.com/v1/create-qr-code/?size=500x500&data=https:/\/fixformalternative-production.up.railway.app/room/<%= room._id %>');" class="btn btn-view">TOON QR</button>
+                                <span id="showQR"
+                                    onclick="showQRCode('https:/\/api.qrserver.com/v1/create-qr-code/?size=500x500&data=https:/\/fixformalternative-production.up.railway.app/room/<%= room._id %>');"
+                                    class="btn btn-view-gray">TOON QR</span>
+                                <a href="/view-room/<%= room._id %>" class="btn btn-view">Info</a>
                                 <a href="/edit-room/<%= room._id %>" class="btn btn-edit">Bewerken</a>
                                 <a href="/delete-room/<%= room._id %>" class="btn btn-delete">Verwijderen</a>
                             </td>
