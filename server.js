@@ -264,9 +264,9 @@ app.post('/delete-document/:roomID/:fileID', checkAuthStatus, async (req, res) =
             return !innerArray.some(doc => doc.id === fileID);
         });
         console.log(newFiles)
-    
+
         await Room.updateOne({ _id: roomID }, { files: newFiles })
-    } catch(error) {
+    } catch (error) {
         console.log(error)
     }
 
@@ -290,6 +290,7 @@ app.get('/report/:id', (req, res) => {
 app.post('/report/:id', upload.single('image'), async (req, res) => {
     const { name, description } = req.body;
     const roomID = req.params.id;
+    const room = await Room.findById(roomID)
     let imageLink = null;
     let googleLink = null;
 
@@ -326,6 +327,11 @@ app.post('/report/:id', upload.single('image'), async (req, res) => {
         await report.save();
         console.log('Report submitted successfully: ' + report._id);
         res.render('thanksreport.ejs', { name });
+        const resp = await fetch(process.env.NTFY_LINK, {
+            method: "POST",
+            body: `Nieuw probleem bij ${room.name}\n${description}\n\nGemeld door ${name} `
+        });
+        // console.log(res);
     } catch (error) {
         console.error('Error submitting report:', error);
         res.status(500).send('Error submitting report');
