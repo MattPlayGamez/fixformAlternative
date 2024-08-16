@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bekijk probleem </title>
+    <script defer src="/viewRoom.js"></script>
     <style>
         body,
         html {
@@ -29,6 +30,8 @@
             padding: 20px;
             box-sizing: border-box;
             color: #333;
+            display: flex;
+            justify-content: space-between;
         }
 
         #dashboardHeader {
@@ -90,6 +93,28 @@
             margin-right: 1vw;
         }
 
+        .documents {
+            width: 45%;
+            border-left: 2px solid #ddd;
+            padding-left: 20px;
+        }
+
+        .documents h2 {
+            color: #131185;
+        }
+
+        .documents a {
+            display: block;
+            color: #0e90a7;
+            text-decoration: none;
+            margin-bottom: 1vh;
+            font-size: 1.2rem;
+        }
+
+        .documents a:hover {
+            text-decoration: underline;
+        }
+
         @media (min-width: 768px) {
             #dashboardHeader {
                 font-size: 36px;
@@ -104,33 +129,119 @@
                 font-size: 17px;
             }
         }
+
+        .x-button {
+            background-color: transparent;
+            border: none;
+            color: red;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            line-height: 1;
+        }
+
+        /* Optional: Add hover effect */
+        .x-button:hover {
+            color: darkred;
+        }
+
+        .preview-file {
+            #preview-iframe {
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                width: 95vw;
+                height: 90vh;
+                border: none;
+                display: none;
+                z-index: 1000;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+                background-color: #fff;
+            }
+        }
+        #preview-file {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1rem solid #fff;
+            z-index: 1000;
+        }
     </style>
 </head>
 
 <body>
     <div id="dashboardContainer">
-        <div id="dashboardHeader">Bekijk dit probleem</div>
-
-        < class="section">
+        <div class="section">
             <h2>Bekijk</h2>
 
             <label for="name">Naam ruimte:</label>
-            <p><%= room.name %></p>
+            <p>
+                <%= room.name %>
+            </p>
+            <label for="name">Plaats:</label>
 
+            <p>
+                <%= room.location %>
+            </p>
             <label for="serialNumber">Serienummer:</label>
-            <p><%= room.serialNumber %></p>
+            <p>
+                <%= room.serialNumber %>
+            </p>
 
             <label for="manufacturer">Fabrikant:</label>
-            <p><%= room.manufacturer %></p>
+            <p>
+                <%= room.manufacturer %>
+            </p>
 
             <label for="contactNumber">ContactNummer:</label>
-            <p><%= room.contactNumber %></p>
+            <p>
+                <%= room.contactNumber %>
+            </p>
+            <% if (lengthProblems !== 0) { %>
+                <label for="allProblems">Aantal problemen</label>
+                <p>
+                    <% if (lengthProblems === 1) { %>
+                       Er is 1 probleem
+                     
+                    <% } else if (lengthProblems > 1) {%>
+                        Er zijn <%= lengthProblems %> problemen
+                     
+                    <% }%>
+            <% } %>
+            
+                 
+            </p>
             <input type="text" id="id" name="id" value="<%= id %>" style="display: none;">
             <a href="/dashboard" class="btn btn-back">Terug naar Dashboard</a>
         </div>
-        <div>
+
+        <div class="documents">
+            <h2>Documenten</h2>
+
+            <% room.files.forEach((fileArray)=> { %>
+                <% fileArray.forEach((doc)=> { %>
+                    <a href="<%= doc.publicLink %>" id="hover-link" target="_blank">
+                        <%= doc.name %>
+
+                    </a>
+                    <form action="/delete-document/<%= id %>/<%= doc.id %>" method="POST">
+                        <!-- Small button shaped like an "X" -->
+                        <button type="submit" class="x-button">X</button>
+                    </form>
+                    <% }) %>
+                        <% }) %>
+
+                            <form action="/view-room/<%= room._id %>" method="POST" enctype="multipart/form-data">
+                                <input type="file" name="docUpload" id="docUpload" accept="documents/*">
+                                <button id="uploadbtn" type="submit" hidden=""></button>
+                            </form>
         </div>
     </div>
+    <script>
+        
+    </script>
+    <iframe src="" width="90%" height="90%" frameborder="0" id="preview-file"></iframe>
 </body>
-
-</html>

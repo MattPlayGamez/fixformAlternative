@@ -4,12 +4,9 @@ const mongoose = require('mongoose')
 const helmet = require('helmet')
 const morgan = require('morgan')
 const app = express()
-const fs = require('fs/promises')
 const multer = require('multer')
-const path = require('path')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const cors = require('cors')
 const checkAuthStatus = require('./authMiddleware.js')
 const cookieParser = require('cookie-parser');
 const fbAdmin = require('firebase-admin')
@@ -17,9 +14,14 @@ const service_account = require('./service_account.json')
 HASH = process.env.HASH
 
 
+
 app.use(helmet())
 app.use(morgan("common"))
 app.use(cookieParser())
+
+const boolEnv = (envVar) => (process.env[envVar] === "y");
+const IMAGE_UPLOAD_PUBLIC = boolEnv("IMAGE_UPLOAD_PUBLIC");
+const DOCUMENT_UPLOAD_PUBLIC = boolEnv("DOCUMENT_UPLOAD_PUBLIC");
 
 fbAdmin.initializeApp({
     credential: fbAdmin.credential.cert(service_account),
@@ -29,7 +31,7 @@ fbAdmin.initializeApp({
 const bucket = fbAdmin.storage().bucket()
 
 
-async function uploadFile(buffer, name) {
+async function uploadFile(buffer, name, directory, mimeType, public) {
     if (!name) {
         throw new Error('No object name provided');
     }
@@ -39,10 +41,10 @@ async function uploadFile(buffer, name) {
     }
 
     return new Promise((resolve, reject) => {
-        const file = bucket.file(name);
+        const file = bucket.file(directory + "/" + name);
         const stream = file.createWriteStream({
             metadata: {
-                contentType: 'image/jpeg',
+                contentType: mimeType,
             },
         });
 
@@ -53,7 +55,11 @@ async function uploadFile(buffer, name) {
 
         stream.on('finish', async () => {
             try {
-                await file.makePublic();
+                if (public) {
+                    await file.makePublic();
+                } else {
+                    await file.makePrivate();
+                }
                 const publicUrl = file.publicUrl();
                 const internalLink = file.cloudStorageURI
                 const combined = publicUrl + '&n&' + internalLink
@@ -99,6 +105,8 @@ const roomSchema = new mongoose.Schema({
     serialNumber: String,
     manufacturer: String,
     contactNumber: String,
+    location: String,
+    files: [{ required: false, type: Array }]
 })
 
 const problemSchema = new mongoose.Schema({
@@ -123,7 +131,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
     if (bcrypt.compareSync(req.body.password, HASH)) {
-        let token = jwt.sign({ authenticated: true }, process.env.JWT_SECRET, { expiresIn: '1h' })
+        let token = jwt.sign({ authenticated: true }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION_TIME })
         // console.log(res.getHeaders());
         res.cookie('token', token)
         return res.redirect('/dashboard')
@@ -153,14 +161,21 @@ app.get('/room/:id', async (req, res) => {
 })
 
 app.get('/delete-problem/:id', checkAuthStatus, async (req, res) => {
-    const problem = await Problem.findById(req.params.id).internalLink
-
+    const problem = await Problem.findById(req.params.id)
+    let link = problem.internalLink.split('.com/')[1]
+    await bucket.file(link).delete()
     await Problem.findByIdAndDelete(req.params.id)
     res.redirect('/dashboard')
 
 })
 app.get('/delete-room/:id', checkAuthStatus, async (req, res) => {
     await Room.findByIdAndDelete(req.params.id)
+    const allProblems = await Problem.find({ roomID: req.params.id })
+    allProblems.forEach(async (problem) => {
+        let link = problem.internalLink.split('.com/')[1]
+        await bucket.file(link).delete()
+
+    })
     await Problem.deleteMany({ roomID: req.params.id })
     res.redirect('/dashboard')
 })
@@ -205,8 +220,58 @@ app.post('/edit-room', checkAuthStatus, async (req, res) => {
 
 app.get('/view-room/:id', checkAuthStatus, async (req, res) => {
     const room = await Room.findById(req.params.id)
-    console.log(room)
-    res.render('view-room.ejs', { room, id: req.params.id })
+    let allProblems = await Problem.find({ roomID: req.params.id })
+    allProblems = allProblems.length
+    // console.log(room)
+    res.render('view-room.ejs', { room, id: req.params.id, lengthProblems: allProblems })
+})
+
+app.post('/view-room/:id', checkAuthStatus, upload.single('docUpload'), async (req, res) => {
+    const room = await Room.findById(req.params.id)
+    const id = req.params.id
+    const randomId = new mongoose.Types.ObjectId().toString();
+
+
+    let publicLink = await uploadFile(req.file.buffer, randomId, "documents", req.file.mimetype, DOCUMENT_UPLOAD_PUBLIC)
+
+    let splittedLink = publicLink.split('&n&');
+    publicLink = splittedLink[0];
+    let internalLink = splittedLink[1];
+    let add2files = room.files
+    add2files.push({
+        id: randomId,
+        name: req.file.originalname,
+        publicLink: publicLink,
+        internalLink: internalLink
+    })
+
+    await Room.updateOne({ _id: id }, { files: add2files })
+
+    res.redirect('/view-room/' + id)
+
+})
+
+app.post('/delete-document/:roomID/:fileID', checkAuthStatus, async (req, res) => {
+    const { roomID, fileID } = req.params
+    try {
+
+        const room = await Room.findById(roomID)
+        let newFiles = await room.files
+        // let newFiles = room.files[0].filter((id) => id[0] != fileID)
+        newFiles = newFiles.filter(innerArray => {
+            // Check if the inner array contains an object with the matching ID
+            bucket.file("documents/" + fileID).delete()
+            return !innerArray.some(doc => doc.id === fileID);
+        });
+        console.log(newFiles)
+    
+        await Room.updateOne({ _id: roomID }, { files: newFiles })
+    } catch(error) {
+        console.log(error)
+    }
+
+    res.redirect('/view-room/' + roomID)
+
 })
 
 app.get('/view-problem/:id', checkAuthStatus, async (req, res) => {
@@ -221,6 +286,7 @@ app.get('/report/:id', (req, res) => {
     res.redirect('/room/' + req.params.id)
 })
 
+
 app.post('/report/:id', upload.single('image'), async (req, res) => {
     const { name, description } = req.body;
     const roomID = req.params.id;
@@ -234,7 +300,7 @@ app.post('/report/:id', upload.single('image'), async (req, res) => {
             const randomId = new mongoose.Types.ObjectId().toString();
             console.log('Generated file name:', randomId);
 
-            imageLink = await uploadFile(req.file.buffer, randomId);
+            imageLink = await uploadFile(req.file.buffer, randomId, "images", req.file.mimetype, IMAGE_UPLOAD_PUBLIC);
             let splittedLink = imageLink.split('&n&');
             googleLink = splittedLink[1];
             imageLink = splittedLink[0];

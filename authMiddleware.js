@@ -12,26 +12,33 @@
  */
 
 const jwt = require('jsonwebtoken')
-
+require('dotenv/config')
+const boolEnv = (envVar) => (process.env[envVar] === "y");
+ENABLE_LOGIN = boolEnv("ENABLE_LOGIN");
 
 function checkAuthStatus(req, res, next) {
-    // const authToken = req.header('authorization');
-    const authToken = req.cookies.token
+    if (ENABLE_LOGIN) {
 
-    console.log(authToken)
+        // const authToken = req.header('authorization');
+        const authToken = req.cookies.token
 
-    if (authToken) {
+        console.log(authToken)
 
-        jwt.verify(authToken, process.env.JWT_SECRET, (err, user) => {
-            if (err) {
-                return res.redirect('/login'); // Forbidden if the token is invalid
-            }
+        if (authToken) {
 
-            console.log(user)
-            next(); // Pass control to the next middleware/route handler
-        });
+            jwt.verify(authToken, process.env.JWT_SECRET, (err, user) => {
+                if (err) {
+                    return res.redirect('/login'); // Forbidden if the token is invalid
+                }
+
+                console.log(user)
+                next(); // Pass control to the next middleware/route handler
+            });
+        } else {
+            res.redirect('/login'); // Unauthorized if no token is provided
+        }
     } else {
-        res.redirect('/login'); // Unauthorized if no token is provided
+        next()
     }
 
 }
