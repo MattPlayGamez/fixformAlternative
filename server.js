@@ -23,11 +23,6 @@ const boolEnv = (envVar) => (process.env[envVar] === "y");
 const IMAGE_UPLOAD_PUBLIC = boolEnv("IMAGE_UPLOAD_PUBLIC");
 const DOCUMENT_UPLOAD_PUBLIC = boolEnv("DOCUMENT_UPLOAD_PUBLIC");
 
-fbAdmin.credential.cert({
-    projectId: process.env.PROJECT_ID,
-    clientEmail: process.env.CLIENT_EMAIL,
-    privateKey: process.env.PRIVATE_KEY
-})
 
 fbAdmin.initializeApp({
     credential: fbAdmin.credential.cert({
