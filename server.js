@@ -10,7 +10,6 @@ const jwt = require('jsonwebtoken')
 const checkAuthStatus = require('./authMiddleware.js')
 const cookieParser = require('cookie-parser');
 const fbAdmin = require('firebase-admin')
-const service_account = require('./service_account.json')
 HASH = process.env.HASH
 
 
