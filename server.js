@@ -23,8 +23,18 @@ const boolEnv = (envVar) => (process.env[envVar] === "y");
 const IMAGE_UPLOAD_PUBLIC = boolEnv("IMAGE_UPLOAD_PUBLIC");
 const DOCUMENT_UPLOAD_PUBLIC = boolEnv("DOCUMENT_UPLOAD_PUBLIC");
 
+fbAdmin.credential.cert({
+    projectId: process.env.PROJECT_ID,
+    clientEmail: process.env.CLIENT_EMAIL,
+    privateKey: process.env.PRIVATE_KEY
+})
+
 fbAdmin.initializeApp({
-    credential: fbAdmin.credential.cert(service_account),
+    credential: fbAdmin.credential.cert({
+        projectId: process.env.PROJECT_ID,
+        clientEmail: process.env.CLIENT_EMAIL,
+        privateKey: process.env.PRIVATE_KEY
+    }),
     storageBucket: "white-watch-405218.appspot.com"
 });
 
@@ -329,7 +339,7 @@ app.post('/report/:id', upload.single('image'), async (req, res) => {
         res.render('thanksreport.ejs', { name });
         const resp = await fetch(process.env.NTFY_LINK, {
             method: "POST",
-            body: `Nieuw probleem bij ${room.name}\n${description}\n\nGemeld door ${name} `
+            body: `Nieuw probleem bij ${room.name}\n${description} \n\nGemeld door ${name} `
         });
         // console.log(res);
     } catch (error) {
